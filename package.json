@@ -1,0 +1,16 @@
+{
+  "name": "nodejs-sept2023",
+  "version": "1.1.12",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "sept-2023"
+  ],
+  "author": "",
+  "license": "ISC"
+}
