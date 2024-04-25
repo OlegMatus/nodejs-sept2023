@@ -1,0 +1,63 @@
+import { NextFunction, Request, Response } from "express";
+
+import { userService } from "../services/user.service";
+import { IUser } from "../user.interface";
+
+class UserController {
+  public async getAll(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const users = await userService.getAll();
+      res.json(users);
+    } catch (e) {
+      next(e);
+    }
+  }
+  public async create(req: Request, res: Response, next: NextFunction) {
+    try {
+      const dto = req.body as Partial<IUser>;
+
+      const newUser = await userService.create(dto);
+
+      res.status(201).json(newUser);
+    } catch (e) {
+      next(e);
+    }
+  }
+  public async getById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = Number(req.params.userId);
+      const user = await userService.getById(userId);
+
+      res.json(user);
+    } catch (e) {
+      next(e);
+    }
+  }
+  public async updateById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = Number(req.params.userId);
+      const dto = req.body as Partial<IUser>;
+
+      const user = await userService.updateById(userId, dto);
+      res.status(201).json(user);
+    } catch (e) {
+      next(e);
+    }
+  }
+  public async deleteById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.params.userId;
+      await userService.deleteById(+userId);
+
+      res.sendStatus(204);
+    } catch (e) {
+      next(e);
+    }
+  }
+}
+
+export const userController = new UserController();
