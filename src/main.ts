@@ -1,5 +1,8 @@
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
+import mongoose from "mongoose";
 
+import { config } from "./configs/config";
+import { ApiError } from "./errors/api-error";
 import { userRouter } from "./routers/user.router";
 
 const app = express();
@@ -9,7 +12,19 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/users", userRouter);
 
-const PORT = 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}/`);
+app.use(
+  "*",
+  (err: ApiError, _req: Request, res: Response, _next: NextFunction) => {
+    return res.status(err.status || 500).json(err.message);
+  },
+);
+
+process.on("uncaughtException", (error) => {
+  console.error("uncaughtException", error);
+  process.exit(1);
+});
+
+app.listen(config.PORT, async () => {
+  await mongoose.connect(config.MONGO_URL);
+  console.log(`Server is running at http://${config.HOST}:${config.PORT}/`);
 });

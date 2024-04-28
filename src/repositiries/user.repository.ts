@@ -1,5 +1,6 @@
 import { reader, writer } from "../fs.service";
-import { IUser } from "../user.interface";
+import { IUser } from "../interfaces/user.interface";
+import { User } from "../models/user.model";
 
 class UserRepository {
   public async getAll(): Promise<IUser[]> {
@@ -37,6 +38,9 @@ class UserRepository {
     const index = users.findIndex((user: IUser) => user.id === userId);
     users.splice(index, 1);
     await writer(users);
+  }
+  public async getByParams(params: Partial<IUser>): Promise<IUser> {
+    return await User.findOne(params);
   }
 }
 

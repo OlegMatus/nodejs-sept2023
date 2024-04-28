@@ -8,7 +8,7 @@ module.exports = {
     root: true,
     rules: {
         // "no-console": ["error", { allow: ["warn", "error"] }],
-        "no-unused-vars": ["error", { argsIgnorePattern: "req|res|next" }],
+        "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "req|res|next" }],
         "simple-import-sort/imports": "error",
         "simple-import-sort/exports": "error",
     },
