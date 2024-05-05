@@ -20,6 +20,10 @@ router.put(
   commonMiddleware.isIdValid,
   userController.updateById,
 );
-router.delete(":userId", commonMiddleware.isIdValid, userController.deleteById);
+router.delete(
+  "/:userId",
+  commonMiddleware.isIdValid,
+  userController.deleteById,
+);
 
 export const userRouter = router;

@@ -1,43 +1,23 @@
-import { reader, writer } from "../fs.service";
 import { IUser } from "../interfaces/user.interface";
 import { User } from "../models/user.model";
 
 class UserRepository {
   public async getAll(): Promise<IUser[]> {
-    return await reader();
+    return await User.find({});
   }
   public async create(dto: Partial<IUser>): Promise<IUser> {
-    const users = await reader();
-    const newUser: IUser = {
-      id: users[users.length - 1].id + 1,
-      name: dto.name,
-      email: dto.email,
-      password: dto.password,
-    };
-    users.push(newUser);
-
-    await writer(users);
-    return newUser;
+    return await User.create(dto);
   }
-  public async getById(userId: number): Promise<IUser> {
-    const users = await reader();
-    return users.find((user: IUser) => user.id === userId);
+  public async getById(userId: string): Promise<IUser> {
+    return await User.findById(userId);
   }
-  public async updateById(userId: number, dto: Partial<IUser>): Promise<IUser> {
-    const { name, email, password } = dto;
-    const users = await reader();
-
-    const index = users.findIndex((user: IUser) => user.id === userId);
-    users[index] = { ...users[index], name, email, password };
-    await writer(users);
-    return users[index];
+  public async updateById(userId: string, dto: Partial<IUser>): Promise<IUser> {
+    return await User.findByIdAndUpdate(userId, dto, {
+      returnDocument: "after",
+    });
   }
-  public async deleteById(userId: number): Promise<void> {
-    const users = await reader();
-
-    const index = users.findIndex((user: IUser) => user.id === userId);
-    users.splice(index, 1);
-    await writer(users);
+  public async deleteById(userId: string): Promise<void> {
+    await User.deleteOne({ _id: userId });
   }
   public async getByParams(params: Partial<IUser>): Promise<IUser> {
     return await User.findOne(params);
