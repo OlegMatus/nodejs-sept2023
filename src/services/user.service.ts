@@ -6,15 +6,8 @@ class UserService {
   public async getAll(): Promise<IUser[]> {
     return await userRepository.getAll();
   }
-  public async create(dto: Partial<IUser>): Promise<IUser> {
-    return await userRepository.create(dto);
-  }
   public async getById(userId: string): Promise<IUser> {
-    const user = await userRepository.getById(userId);
-    if (!user) {
-      throw new ApiError("User notfound", 404);
-    }
-    return user;
+    return await this.findUserOrThrow(userId);
   }
   public async updateById(userId: string, dto: Partial<IUser>): Promise<IUser> {
     await this.findUserOrThrow(userId);
