@@ -1,6 +1,7 @@
 import { ApiError } from "../errors/api-error";
 import { IAuth } from "../interfaces/auth.interface";
-import { ITokenResponse } from "../interfaces/token-pair.interface";
+import { IJWTPayload } from "../interfaces/jwt-payload.interface";
+import { IToken, ITokenResponse } from "../interfaces/token-pair.interface";
 import { IUser } from "../interfaces/user.interface";
 import { authRepository } from "../repositiries/auth.repository";
 import { userRepository } from "../repositiries/user.repository";
@@ -28,7 +29,9 @@ class AuthService {
     });
     return { user, tokens };
   }
-  public async signIn(dto: Partial<IAuth>): Promise<IUser> {
+  public async signIn(
+    dto: Partial<IAuth>,
+  ): Promise<{ user: IUser; tokens: ITokenResponse }> {
     const user = await userRepository.getByParams({ email: dto.email });
     if (!user) {
       throw new ApiError("Wrong email or password", 401);
@@ -40,7 +43,35 @@ class AuthService {
     if (!isCompare) {
       throw new ApiError("Wrong email or password", 401);
     }
-    return user;
+    const tokens = tokenService.generatePair({
+      userId: user._id,
+      role: user.role,
+    });
+    await authRepository.create({
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      _userId: user._id,
+    });
+    return { user, tokens };
+  }
+  public async refresh(
+    jwtPayload: IJWTPayload,
+    oldPair: IToken,
+  ): Promise<ITokenResponse> {
+    const newPair = tokenService.generatePair({
+      userId: jwtPayload.userId,
+      role: jwtPayload.role,
+    });
+
+    await authRepository.deleteById(oldPair._id);
+
+    await authRepository.create({
+      ...newPair,
+      _userId: jwtPayload.userId,
+    });
+    return newPair;
+
+    console.log(jwtPayload);
   }
   private async isEmailExist(email: string): Promise<void> {
     const user = await userRepository.getByParams({ email });

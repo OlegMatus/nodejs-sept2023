@@ -18,7 +18,7 @@ module.exports = {
     },
     plugins: ["@typescript-eslint/eslint-plugin", "simple-import-sort", "import"],
     rules: {
-        indent: ["error", 2],
+        // indent: ["error", 2],
         quotes: ["error", "double"],
         semi: ["error", "always"],
         "@typescript-eslint/interface-name-prefix": "off",
@@ -44,21 +44,5 @@ module.exports = {
             },
         ],
     },
-    ignorePatterns: ['.eslintrc.cjs', '/dist', '/data'],
+    ignorePatterns: ['.eslintrc.js', '/dist', '/data'],
 };
-
-// module.exports = {
-//     extends: [
-//         "plugin:prettier/recommended",
-//         "plugin:@typescript-eslint/recommended",
-//     ],
-//     parser: "@typescript-eslint/parser",
-//     plugins: ["@typescript-eslint", "simple-import-sort"],
-//     root: true,
-//     rules: {
-//         // "no-console": ["error", { allow: ["warn", "error"] }],
-//         "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "req|res|next" }],
-//         "simple-import-sort/imports": "error",
-//         "simple-import-sort/exports": "error",
-//     },
-// };
