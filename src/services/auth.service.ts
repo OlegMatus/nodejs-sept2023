@@ -1,3 +1,5 @@
+import { config } from "../configs/config";
+import { EmailTypeEnum } from "../enums/email-type.enum";
 import { ApiError } from "../errors/api-error";
 import { IAuth } from "../interfaces/auth.interface";
 import { IJWTPayload } from "../interfaces/jwt-payload.interface";
@@ -6,6 +8,7 @@ import { IUser } from "../interfaces/user.interface";
 import { authRepository } from "../repositiries/auth.repository";
 import { userRepository } from "../repositiries/user.repository";
 import { passwordService } from "./password.service";
+import { sendMailService } from "./sendMail.service";
 import { tokenService } from "./token.service";
 
 class AuthService {
@@ -26,6 +29,11 @@ class AuthService {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       _userId: user._id,
+    });
+    await sendMailService.sendByType(user.email, EmailTypeEnum.WELCOME, {
+      name: dto.name,
+      frontUrl: config.FRONT_URL,
+      actionToken: "actionToken",
     });
     return { user, tokens };
   }
