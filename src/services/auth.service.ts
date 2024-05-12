@@ -1,6 +1,8 @@
 import { config } from "../configs/config";
+import { ActionTokenTypeEnum } from "../enums/action-token-type.enum";
 import { EmailTypeEnum } from "../enums/email-type.enum";
 import { ApiError } from "../errors/api-error";
+import { IForgotDto } from "../interfaces/action-token.interface";
 import { IAuth } from "../interfaces/auth.interface";
 import { IJWTPayload } from "../interfaces/jwt-payload.interface";
 import { IToken, ITokenResponse } from "../interfaces/token-pair.interface";
@@ -82,6 +84,19 @@ class AuthService {
     return newPair;
 
     console.log(jwtPayload);
+  }
+  public async forgotPassword(dto: IForgotDto): Promise<void> {
+    const user = await userRepository.getByParams({ email: dto.email });
+    if (!user) return;
+
+    const actionToken = tokenService.generateActionToken(
+      { userId: user._id, role: user.role },
+      ActionTokenTypeEnum.FORGOT,
+    );
+    await sendMailService.sendByType(user.email, EmailTypeEnum.RESET_PASSWORD, {
+      frontUrl: config.FRONT_URL,
+      actionToken,
+    });
   }
   private async isEmailExist(email: string): Promise<void> {
     const user = await userRepository.getByParams({ email });

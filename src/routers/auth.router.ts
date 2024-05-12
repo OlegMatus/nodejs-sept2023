@@ -22,5 +22,10 @@ router.post(
   authMiddleware.checkRefreshToken,
   authController.refresh,
 );
+router.post(
+  "/forgot-password",
+  // commonMiddleware.isBodyValid(UserValidator.)
+  authController.forgotPassword,
+);
 
 export const authRouter = router;
