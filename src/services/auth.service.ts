@@ -9,7 +9,7 @@ import { authRepository } from "../repositiries/auth.repository";
 import { userRepository } from "../repositiries/user.repository";
 import { passwordService } from "./password.service";
 import { sendMailService } from "./sendMail.service";
-import { smsService } from "./sms.service";
+import { smsPrepareService } from "./sms-prepare.service";
 import { tokenService } from "./token.service";
 
 class AuthService {
@@ -36,7 +36,7 @@ class AuthService {
       frontUrl: config.FRONT_URL,
       actionToken: "actionToken",
     });
-    await smsService.sendSms(user.phone, "Welcome to your app");
+    await smsPrepareService.register(user.phone, { name: user.name });
     return { user, tokens };
   }
   public async signIn(
