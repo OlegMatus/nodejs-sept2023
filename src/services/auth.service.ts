@@ -2,12 +2,16 @@ import { config } from "../configs/config";
 import { ActionTokenTypeEnum } from "../enums/action-token-type.enum";
 import { EmailTypeEnum } from "../enums/email-type.enum";
 import { ApiError } from "../errors/api-error";
-import { IForgotDto } from "../interfaces/action-token.interface";
+import {
+  IForgotDto,
+  ISetForgotDto,
+} from "../interfaces/action-token.interface";
 import { IAuth } from "../interfaces/auth.interface";
 import { IJWTPayload } from "../interfaces/jwt-payload.interface";
 import { IToken, ITokenResponse } from "../interfaces/token-pair.interface";
 import { IUser } from "../interfaces/user.interface";
-import { authRepository } from "../repositiries/auth.repository";
+import { actionTokenRepository } from "../repositiries/action-token.repository";
+import { tokenRepository } from "../repositiries/token.repository";
 import { userRepository } from "../repositiries/user.repository";
 import { passwordService } from "./password.service";
 import { sendMailService } from "./sendMail.service";
@@ -28,17 +32,28 @@ class AuthService {
       userId: user._id,
       role: user.role,
     });
-    await authRepository.create({
+    await tokenRepository.create({
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       _userId: user._id,
     });
-    await sendMailService.sendByType(user.email, EmailTypeEnum.WELCOME, {
-      name: dto.name,
-      frontUrl: config.FRONT_URL,
-      actionToken: "actionToken",
+    const actionToken = tokenService.generateActionToken(
+      { userId: user._id, role: user.role },
+      ActionTokenTypeEnum.VERIFY,
+    );
+    await actionTokenRepository.create({
+      tokenType: ActionTokenTypeEnum.VERIFY,
+      actionToken,
+      _userId: user._id,
     });
-    await smsService.sendSms(user.phone, "Welcome to your app");
+    await Promise.all([
+      sendMailService.sendByType(user.email, EmailTypeEnum.WELCOME, {
+        name: dto.name,
+        frontUrl: config.FRONT_URL,
+        actionToken,
+      }),
+      smsService.sendSms(user.phone, "Welcome to your app"),
+    ]);
     return { user, tokens };
   }
   public async signIn(
@@ -59,7 +74,7 @@ class AuthService {
       userId: user._id,
       role: user.role,
     });
-    await authRepository.create({
+    await tokenRepository.create({
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       _userId: user._id,
@@ -75,9 +90,9 @@ class AuthService {
       role: jwtPayload.role,
     });
 
-    await authRepository.deleteById(oldPair._id);
+    await tokenRepository.deleteById(oldPair._id);
 
-    await authRepository.create({
+    await tokenRepository.create({
       ...newPair,
       _userId: jwtPayload.userId,
     });
@@ -93,10 +108,41 @@ class AuthService {
       { userId: user._id, role: user.role },
       ActionTokenTypeEnum.FORGOT,
     );
+    await actionTokenRepository.create({
+      tokenType: ActionTokenTypeEnum.FORGOT,
+      actionToken,
+      _userId: user._id,
+    });
     await sendMailService.sendByType(user.email, EmailTypeEnum.RESET_PASSWORD, {
       frontUrl: config.FRONT_URL,
       actionToken,
     });
+  }
+  public async setForgotPassword(
+    dto: ISetForgotDto,
+    jwtPayload: IJWTPayload,
+  ): Promise<void> {
+    const user = await userRepository.getById(jwtPayload.userId);
+    const hashedPassword = await passwordService.hashPassword(dto.password);
+
+    await userRepository.updateById(user._id, { password: hashedPassword });
+    await actionTokenRepository.deleteByParams({
+      tokenType: ActionTokenTypeEnum.FORGOT,
+    });
+    await tokenRepository.deleteByParams({
+      _userId: user._id,
+    }); /*logout all devices*/
+  }
+  public async verify(jwtPayload: IJWTPayload): Promise<IUser> {
+    const [user] = await Promise.all([
+      await userRepository.updateById(jwtPayload.userId, {
+        isVerified: true,
+      }),
+      await actionTokenRepository.deleteByParams({
+        tokenType: ActionTokenTypeEnum.VERIFY,
+      }),
+    ]);
+    return user;
   }
   private async isEmailExist(email: string): Promise<void> {
     const user = await userRepository.getByParams({ email });

@@ -3,7 +3,7 @@ import { FilterQuery } from "mongoose";
 import { IToken } from "../interfaces/token-pair.interface";
 import { Token } from "../models/token.model";
 
-class AuthRepository {
+class TokenRepository {
   public async create(dto: IToken): Promise<IToken> {
     return await Token.create(dto);
   }
@@ -13,6 +13,9 @@ class AuthRepository {
   public async deleteById(id: string): Promise<void> {
     await Token.deleteOne({ _id: id });
   }
+  public async deleteByParams(params: FilterQuery<IToken>): Promise<void> {
+    await Token.deleteMany(params);
+  }
 }
 
-export const authRepository = new AuthRepository();
+export const tokenRepository = new TokenRepository();

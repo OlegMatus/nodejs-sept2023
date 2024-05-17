@@ -1,9 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 
+import { ActionTokenTypeEnum } from "../enums/action-token-type.enum";
 import { TokenTypeEnum } from "../enums/token-type.enum";
 import { ApiError } from "../errors/api-error";
 import { IJWTPayload } from "../interfaces/jwt-payload.interface";
-import { authRepository } from "../repositiries/auth.repository";
+import { actionTokenRepository } from "../repositiries/action-token.repository";
+import { tokenRepository } from "../repositiries/token.repository";
 import { tokenService } from "../services/token.service";
 
 class AuthMiddleware {
@@ -23,7 +25,7 @@ class AuthMiddleware {
         TokenTypeEnum.ACCESS,
       );
 
-      const tokenPair = await authRepository.findByParams({ accessToken });
+      const tokenPair = await tokenRepository.findByParams({ accessToken });
       if (!tokenPair) {
         throw new ApiError("Invalid token", 401);
       }
@@ -49,7 +51,7 @@ class AuthMiddleware {
         TokenTypeEnum.REFRESH,
       );
 
-      const tokenPair = await authRepository.findByParams({ refreshToken });
+      const tokenPair = await tokenRepository.findByParams({ refreshToken });
       if (!tokenPair) {
         throw new ApiError("Invalid token", 401);
       }
@@ -58,6 +60,28 @@ class AuthMiddleware {
     } catch (e) {
       next(e);
     }
+  }
+  public checkActionToken(type: ActionTokenTypeEnum, key = "token") {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const actionToken = req.query[key] as string;
+        if (!actionToken) {
+          throw new ApiError("No token provided", 404);
+        }
+        const payload = tokenService.checkActionToken(actionToken, type);
+
+        const entity = await actionTokenRepository.findByParams({
+          actionToken,
+        });
+        if (!entity) {
+          throw new ApiError("Invalid token", 401);
+        }
+        req.res.locals.jwtPayload = payload as IJWTPayload;
+        next();
+      } catch (e) {
+        next(e);
+      }
+    };
   }
 }
 
