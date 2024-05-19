@@ -1,4 +1,6 @@
 import { config } from "../configs/config";
+import { errorMessages } from "../constants/error-messages.constants";
+import { HttpStatus } from "../constants/http-status.constants";
 import { EmailTypeEnum } from "../enums/email-type.enum";
 import { ApiError } from "../errors/api-error";
 import { IAuth } from "../interfaces/auth.interface";
@@ -44,14 +46,20 @@ class AuthService {
   ): Promise<{ user: IUser; tokens: ITokenResponse }> {
     const user = await userRepository.getByParams({ email: dto.email });
     if (!user) {
-      throw new ApiError("Wrong email or password", 401);
+      throw new ApiError(
+        errorMessages.WRONG_EMAIL_OR_PASSWORD,
+        HttpStatus.UNAUTHORIZED,
+      );
     }
     const isCompare = await passwordService.comparePassword(
       dto.password,
       user.password,
     );
     if (!isCompare) {
-      throw new ApiError("Wrong email or password", 401);
+      throw new ApiError(
+        errorMessages.WRONG_EMAIL_OR_PASSWORD,
+        HttpStatus.UNAUTHORIZED,
+      );
     }
     const tokens = tokenService.generatePair({
       userId: user._id,
@@ -86,7 +94,10 @@ class AuthService {
   private async isEmailExist(email: string): Promise<void> {
     const user = await userRepository.getByParams({ email });
     if (user) {
-      throw new ApiError("email already exist", 409);
+      throw new ApiError(
+        errorMessages.EMAIL_ALREADY_EXIST,
+        HttpStatus.CONFLICT,
+      );
     }
   }
 }
