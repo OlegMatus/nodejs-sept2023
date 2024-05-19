@@ -11,7 +11,7 @@ import {
 import { IAuth } from "../interfaces/auth.interface";
 import { IJWTPayload } from "../interfaces/jwt-payload.interface";
 import { IToken, ITokenResponse } from "../interfaces/token-pair.interface";
-import { IUser } from "../interfaces/user.interface";
+import { IChangePassword, IUser } from "../interfaces/user.interface";
 import { actionTokenRepository } from "../repositiries/action-token.repository";
 import { tokenRepository } from "../repositiries/token.repository";
 import { userRepository } from "../repositiries/user.repository";
@@ -151,6 +151,25 @@ class AuthService {
       }),
     ]);
     return user;
+  }
+  public async changePassword(
+    jwtPayload: IJWTPayload,
+    dto: IChangePassword,
+  ): Promise<void> {
+    const user = await userRepository.getById(jwtPayload.userId);
+    const isCompare = await passwordService.comparePassword(
+      dto.oldPassword,
+      user.password,
+    );
+    if (!isCompare) {
+      throw new ApiError(
+        errorMessages.WRONG_OLD_PASSWORD,
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+    const hashedPassword = await passwordService.hashPassword(dto.newPassword);
+    await userRepository.updateById(user._id, { password: hashedPassword });
+    await tokenRepository.deleteByParams({ _userId: user._id });
   }
   private async isEmailExist(email: string): Promise<void> {
     const user = await userRepository.getByParams({ email });

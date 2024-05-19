@@ -6,7 +6,7 @@ import {
 } from "../interfaces/action-token.interface";
 import { IAuth } from "../interfaces/auth.interface";
 import { IJWTPayload } from "../interfaces/jwt-payload.interface";
-import { IUser } from "../interfaces/user.interface";
+import {IChangePassword, IUser} from "../interfaces/user.interface";
 import { tokenRepository } from "../repositiries/token.repository";
 import { authService } from "../services/auth.service";
 
@@ -72,6 +72,17 @@ class AuthController {
 
       const user = await authService.verify(jwtPayload);
       res.status(201).json(user);
+    } catch (e) {
+      next(e);
+    }
+  }
+  public async changePassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const jwtPayload = req.res.locals.jwtPayload as IJWTPayload;
+      const body = req.body as IChangePassword;
+
+      await authService.changePassword(jwtPayload, body);
+      res.sendStatus(201);
     } catch (e) {
       next(e);
     }

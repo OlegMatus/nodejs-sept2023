@@ -30,3 +30,7 @@ export interface IPrivateUser {
   isDeleted: boolean;
   isVerified: boolean;
 }
+export interface IChangePassword {
+  oldPassword: string;
+  newPassword: string;
+}

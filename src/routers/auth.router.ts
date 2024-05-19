@@ -38,5 +38,11 @@ router.put(
   authMiddleware.checkActionToken(ActionTokenTypeEnum.FORGOT),
   authController.setForgotPassword,
 );
+router.patch(
+  "/change-password",
+  commonMiddleware.isBodyValid(UserValidator.changePassword),
+  authMiddleware.checkAccessToken,
+  authController.changePassword,
+);
 
 export const authRouter = router;
