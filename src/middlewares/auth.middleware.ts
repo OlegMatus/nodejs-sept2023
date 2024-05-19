@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 
+import { errorMessages } from "../constants/error-messages.constant";
+import { HttpStatus } from "../constants/http-status.constant";
 import { ActionTokenTypeEnum } from "../enums/action-token-type.enum";
 import { TokenTypeEnum } from "../enums/token-type.enum";
 import { ApiError } from "../errors/api-error";
@@ -18,7 +20,10 @@ class AuthMiddleware {
       // const accessToken = req.headers.authorization;
       const accessToken = req.get("Authorization");
       if (!accessToken) {
-        throw new ApiError("No token provided", 401);
+        throw new ApiError(
+          errorMessages.NO_TOKEN_PROVIDED_OR_TOKEN_IS_NOT_VALID,
+          HttpStatus.UNAUTHORIZED,
+        );
       }
       const payload = tokenService.checkToken(
         accessToken,
@@ -27,7 +32,10 @@ class AuthMiddleware {
 
       const tokenPair = await tokenRepository.findByParams({ accessToken });
       if (!tokenPair) {
-        throw new ApiError("Invalid token", 401);
+        throw new ApiError(
+          errorMessages.NO_TOKEN_PROVIDED_OR_TOKEN_IS_NOT_VALID,
+          HttpStatus.UNAUTHORIZED,
+        );
       }
       req.res.locals.jwtPayload = payload;
       next();
@@ -44,7 +52,10 @@ class AuthMiddleware {
       // const refreshToken = req.headers.authorization;
       const refreshToken = req.get("Authorization");
       if (!refreshToken) {
-        throw new ApiError("No token provided", 401);
+        throw new ApiError(
+          errorMessages.NO_TOKEN_PROVIDED_OR_TOKEN_IS_NOT_VALID,
+          HttpStatus.UNAUTHORIZED,
+        );
       }
       const payload = tokenService.checkToken(
         refreshToken,
@@ -53,7 +64,10 @@ class AuthMiddleware {
 
       const tokenPair = await tokenRepository.findByParams({ refreshToken });
       if (!tokenPair) {
-        throw new ApiError("Invalid token", 401);
+        throw new ApiError(
+          errorMessages.NO_TOKEN_PROVIDED_OR_TOKEN_IS_NOT_VALID,
+          HttpStatus.UNAUTHORIZED,
+        );
       }
       req.res.locals.jwtPayload = payload as IJWTPayload;
       next();
@@ -66,7 +80,10 @@ class AuthMiddleware {
       try {
         const actionToken = req.query[key] as string;
         if (!actionToken) {
-          throw new ApiError("No token provided", 404);
+          throw new ApiError(
+            errorMessages.NO_TOKEN_PROVIDED_OR_TOKEN_IS_NOT_VALID,
+            HttpStatus.UNAUTHORIZED,
+          );
         }
         const payload = tokenService.checkActionToken(actionToken, type);
 
