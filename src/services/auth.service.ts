@@ -1,6 +1,7 @@
 import { config } from "../configs/config";
 import { errorMessages } from "../constants/error-messages.constant";
 import { HttpStatus } from "../constants/http-status.constant";
+import { MeasureTimeDecorator } from "../decorators/measure-time.decorator";
 import { ActionTokenTypeEnum } from "../enums/action-token-type.enum";
 import { EmailTypeEnum } from "../enums/email-type.enum";
 import { ApiError } from "../errors/api-error";
@@ -58,6 +59,7 @@ class AuthService {
     ]);
     return { user, tokens };
   }
+  @MeasureTimeDecorator
   public async signIn(
     dto: Partial<IAuth>,
   ): Promise<{ user: IUser; tokens: ITokenResponse }> {
